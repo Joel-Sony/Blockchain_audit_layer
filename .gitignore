@@ -1,0 +1,12 @@
+# secrets / local config
+.env
+
+# fabric-samples is a vendored clone of the upstream Hyperledger repo, not our code
+fabric-samples/
+
+# Go
+*.exe
+*.test
+
+# Node (Phase 16 frontend)
+node_modules/
