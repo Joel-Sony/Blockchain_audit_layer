@@ -1,0 +1,165 @@
+# Phase 2, step 4: the orderer node + one peer per org.
+# Uses the MSP/TLS identities from register-enroll.sh (Step 2). The orderer
+# does NOT bootstrap from the genesis block file directly — it starts empty
+# (ORDERER_GENERAL_BOOTSTRAPMETHOD=none) and joins the channel afterwards via
+# the channel participation admin API (port 7053), which is the current
+# Fabric 2.x way (no old-style "system channel").
+
+networks:
+  fabric-net:
+    name: healthcare-fabric-net
+    external: true   # created by docker-compose-ca.yaml; both files share it
+
+volumes:
+  orderer1.orderer.healthcare.com:
+  peer0.hospitala.healthcare.com:
+  peer0.hospitalb.healthcare.com:
+  peer0.lab.healthcare.com:
+
+services:
+
+  orderer1.orderer.healthcare.com:
+    container_name: orderer1.orderer.healthcare.com
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ./organizations/ordererOrganizations/orderer.healthcare.com/orderers/orderer1.orderer.healthcare.com/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/orderer.healthcare.com/orderers/orderer1.orderer.healthcare.com/tls:/var/hyperledger/orderer/tls
+      - orderer1.orderer.healthcare.com:/var/hyperledger/production/orderer
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+      - "9443:9443"
+    networks:
+      - fabric-net
+
+  peer0.hospitala.healthcare.com:
+    container_name: peer0.hospitala.healthcare.com
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=healthcare-fabric-net
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.hospitala.healthcare.com
+      - CORE_PEER_ADDRESS=peer0.hospitala.healthcare.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hospitala.healthcare.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hospitala.healthcare.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hospitala.healthcare.com:7051
+      - CORE_PEER_LOCALMSPID=HospitalAMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9444
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - ./config/peercfg:/etc/hyperledger/peercfg
+      - ./organizations/peerOrganizations/hospitala.healthcare.com/peers/peer0.hospitala.healthcare.com:/etc/hyperledger/fabric
+      - peer0.hospitala.healthcare.com:/var/hyperledger/production
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "7051:7051"
+      - "9444:9444"
+    networks:
+      - fabric-net
+
+  peer0.hospitalb.healthcare.com:
+    container_name: peer0.hospitalb.healthcare.com
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=healthcare-fabric-net
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.hospitalb.healthcare.com
+      - CORE_PEER_ADDRESS=peer0.hospitalb.healthcare.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hospitalb.healthcare.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hospitalb.healthcare.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hospitalb.healthcare.com:8051
+      - CORE_PEER_LOCALMSPID=HospitalBMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9445
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - ./config/peercfg:/etc/hyperledger/peercfg
+      - ./organizations/peerOrganizations/hospitalb.healthcare.com/peers/peer0.hospitalb.healthcare.com:/etc/hyperledger/fabric
+      - peer0.hospitalb.healthcare.com:/var/hyperledger/production
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "8051:8051"
+      - "9445:9445"
+    networks:
+      - fabric-net
+
+  peer0.lab.healthcare.com:
+    container_name: peer0.lab.healthcare.com
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=healthcare-fabric-net
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.lab.healthcare.com
+      - CORE_PEER_ADDRESS=peer0.lab.healthcare.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.lab.healthcare.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.lab.healthcare.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.lab.healthcare.com:9051
+      - CORE_PEER_LOCALMSPID=LabMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - ./config/peercfg:/etc/hyperledger/peercfg
+      - ./organizations/peerOrganizations/lab.healthcare.com/peers/peer0.lab.healthcare.com:/etc/hyperledger/fabric
+      - peer0.lab.healthcare.com:/var/hyperledger/production
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - "9051:9051"
+      - "9446:9446"
+    networks:
+      - fabric-net

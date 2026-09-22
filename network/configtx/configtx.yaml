@@ -1,0 +1,167 @@
+# Phase 2, step 3: defines the 4 orgs and the one shared channel
+# ("healthchannel") that Hospital A, Hospital B, and the Lab will all join.
+# configtxgen compiles this into the channel's genesis block — the very
+# first block on the ledger, containing the channel's starting config
+# (which orgs exist, what their policies are) rather than any application
+# data.
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/orderer.healthcare.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer1.orderer.healthcare.com:7050
+
+  - &HospitalA
+    Name: HospitalAMSP
+    ID: HospitalAMSP
+    MSPDir: ../organizations/peerOrganizations/hospitala.healthcare.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('HospitalAMSP.admin', 'HospitalAMSP.peer', 'HospitalAMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('HospitalAMSP.admin', 'HospitalAMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('HospitalAMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('HospitalAMSP.peer')"
+
+  - &HospitalB
+    Name: HospitalBMSP
+    ID: HospitalBMSP
+    MSPDir: ../organizations/peerOrganizations/hospitalb.healthcare.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('HospitalBMSP.admin', 'HospitalBMSP.peer', 'HospitalBMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('HospitalBMSP.admin', 'HospitalBMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('HospitalBMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('HospitalBMSP.peer')"
+
+  - &Lab
+    Name: LabMSP
+    ID: LabMSP
+    MSPDir: ../organizations/peerOrganizations/lab.healthcare.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('LabMSP.admin', 'LabMSP.peer', 'LabMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('LabMSP.admin', 'LabMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('LabMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('LabMSP.peer')"
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer1.orderer.healthcare.com:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer1.orderer.healthcare.com
+        Port: 7050
+        ClientTLSCert: ../organizations/ordererOrganizations/orderer.healthcare.com/orderers/orderer1.orderer.healthcare.com/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/orderer.healthcare.com/orderers/orderer1.orderer.healthcare.com/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  HealthcareChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *HospitalA
+        - *HospitalB
+        - *Lab
+      Capabilities: *ApplicationCapabilities

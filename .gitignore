@@ -1,12 +1,31 @@
 # secrets / local config
 .env
 
+# Fabric network crypto material — private keys, generated locally by
+# scripts/register-enroll.sh. Never commit these; anyone can regenerate
+# them by re-running the script against a fresh set of CAs.
+network/organizations/peerOrganizations/
+network/organizations/ordererOrganizations/
+network/organizations/fabric-ca/*/msp/
+network/organizations/fabric-ca/*/*.db
+network/organizations/fabric-ca/*/*key*
+network/organizations/fabric-ca/*/IssuerPublicKey
+network/organizations/fabric-ca/*/IssuerRevocationPublicKey
+network/organizations/fabric-ca/*/tls-cert.pem
+network/organizations/fabric-ca/*/fabric-ca-server-config.yaml
+
+# Generated channel artifacts (genesis block etc.) — rebuilt from configtx.yaml
+network/channel-artifacts/
+
 # fabric-samples is a vendored clone of the upstream Hyperledger repo, not our code
 fabric-samples/
 
 # Go
 *.exe
 *.test
+vendor/
+chaincode/*/proofoflife
+chaincode/*/*.tar.gz
 
 # Node (Phase 16 frontend)
 node_modules/
