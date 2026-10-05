@@ -1,0 +1,1160 @@
+<title>Healthchannel Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    --paper: #EDF1F0;
+    --surface: #F9FBFA;
+    --sunken: #E3E9E8;
+    --ink: #14212A;
+    --muted: #56676E;
+    --line: #C7D2D0;
+    --accent: #0E6B73;
+    --accent-ink: #FFFFFF;
+    --ok: #26744A;
+    --ok-soft: #DCEFE3;
+    --bad: #B42318;
+    --bad-soft: #F8E1DE;
+    --sim: #946200;
+    --sim-soft: #F6EBD2;
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #0E161A;
+      --surface: #152026;
+      --sunken: #1B2A31;
+      --ink: #E2EBEA;
+      --muted: #93A6AC;
+      --line: #2B3C43;
+      --accent: #56B7C0;
+      --accent-ink: #0B1519;
+      --ok: #62C58F;
+      --ok-soft: #173327;
+      --bad: #F07A6E;
+      --bad-soft: #3A1B19;
+      --sim: #E2B24E;
+      --sim-soft: #342811;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #0E161A;
+    --surface: #152026;
+    --sunken: #1B2A31;
+    --ink: #E2EBEA;
+    --muted: #93A6AC;
+    --line: #2B3C43;
+    --accent: #56B7C0;
+    --accent-ink: #0B1519;
+    --ok: #62C58F;
+    --ok-soft: #173327;
+    --bad: #F07A6E;
+    --bad-soft: #3A1B19;
+    --sim: #E2B24E;
+    --sim-soft: #342811;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    padding-inline: 16px;
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.55 var(--body);
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-block: 32px 72px; display: grid; gap: 40px; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h1 { font-size: 30px; line-height: 1.15; }
+  h2 { font-size: 21px; }
+  h3 { font-size: 16px; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 68ch; }
+  .eyebrow {
+    font: 500 11.5px/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .mono { font-family: var(--mono); font-size: 12.5px; }
+  .hash { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+  .muted { color: var(--muted); }
+  section { display: grid; gap: 16px; }
+  .section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+  .section-head > div:first-child { display: grid; gap: 4px; }
+
+  button {
+    font: 500 13.5px/1 var(--body);
+    padding: 9px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button.danger { color: var(--bad); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  .chip {
+    display: inline-block;
+    font: 500 10.5px/1 var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 6px;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+  }
+  .chip.real { color: var(--accent); }
+  .chip.sim { color: var(--sim); border-style: dashed; }
+  .chip.ok { color: var(--ok); }
+  .chip.bad { color: var(--bad); }
+
+  /* ---- header / network ---- */
+  header { display: grid; gap: 20px; }
+  header .top { display: grid; gap: 8px; }
+  .network { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+  .node {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: grid;
+    gap: 3px;
+  }
+  .node .name { font-weight: 600; }
+  .node .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: 6px; vertical-align: 1px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px; }
+  .facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); align-items: center; }
+
+  /* ---- chain ---- */
+  .chain-scroll { overflow-x: auto; padding: 4px 2px 10px; }
+  .chain { display: flex; align-items: stretch; width: max-content; }
+  .block {
+    width: 178px;
+    text-align: left;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    padding: 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    line-height: 1.35;
+  }
+  .block.sim { border-style: dashed; border-color: var(--sim); background: var(--sim-soft); }
+  .block.selected { box-shadow: 0 0 0 2px var(--accent); }
+  .block.altered { border-color: var(--bad); background: var(--bad-soft); }
+  .block .num { font: 700 20px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .block .what { font-size: 13px; font-weight: 500; }
+  .block .h { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .link { width: 46px; align-self: center; display: grid; justify-items: center; gap: 2px; }
+  .link .bar { width: 100%; height: 2px; background: var(--ok); }
+  .link .tag { font: 500 9.5px/1 var(--mono); color: var(--ok); }
+  .link.broken .bar { background: var(--bad); height: 0; border-top: 2px dashed var(--bad); }
+  .link.broken .tag { color: var(--bad); }
+  .status {
+    font-size: 13.5px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    background: var(--sunken);
+    border-left: 3px solid var(--line);
+  }
+  .status.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+  .status.bad { background: var(--bad-soft); border-left-color: var(--bad); }
+
+  .detail {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+  }
+  .detail .note { max-width: 75ch; }
+  dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0; font-size: 13.5px; }
+  dl.kv dt { color: var(--muted); }
+  dl.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  @media (max-width: 560px) {
+    dl.kv { grid-template-columns: 1fr; gap: 2px; }
+    dl.kv dd { margin-bottom: 8px; }
+  }
+
+  /* ---- workbench ---- */
+  .bench { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; align-items: start; }
+  @media (max-width: 420px) { .bench { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+  .who { font-size: 13px; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+  .seg label { padding: 7px 12px; font-size: 13px; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label:has(input:checked) { background: var(--accent); color: var(--accent-ink); }
+  .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .report {
+    margin: 0;
+    font: 12px/1.5 var(--mono);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 12px;
+    overflow-x: auto;
+    max-height: 360px;
+  }
+  .report mark { background: var(--bad-soft); color: var(--bad); font-weight: 500; }
+  input[type="file"] { font: 13px var(--body); max-width: 100%; }
+  select { font: 13.5px var(--body); padding: 8px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); max-width: 100%; }
+
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: step; }
+  ol.steps > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 2px 12px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+  }
+  ol.steps > li::before {
+    content: counter(step);
+    grid-row: span 3;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font: 600 12px/1 var(--mono);
+    border: 1.5px solid var(--line);
+    color: var(--muted);
+  }
+  ol.steps > li.done::before { border-color: var(--ok); color: var(--ok); }
+  ol.steps > li.fail::before { border-color: var(--bad); color: var(--bad); content: "!"; }
+  ol.steps > li.active::before { border-color: var(--accent); color: var(--accent); }
+  .step-title { font-weight: 600; font-size: 14px; }
+  .step-why { font-size: 13px; color: var(--muted); }
+  .step-out { font: 12px/1.5 var(--mono); overflow-wrap: anywhere; min-width: 0; }
+  .step-out:empty { display: none; }
+  .step-out .k { color: var(--muted); }
+  .endorse { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .endorse span { font: 500 11.5px/1 var(--mono); padding: 5px 7px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+  .endorse span.yes { border-color: var(--ok); color: var(--ok); }
+
+  .verdict { padding: 14px 16px; border-radius: 6px; display: grid; gap: 4px; }
+  .verdict.ok { background: var(--ok-soft); border: 1px solid var(--ok); }
+  .verdict.bad { background: var(--bad-soft); border: 1px solid var(--bad); }
+  .verdict .big { font: 700 18px/1.2 var(--display); }
+  .verdict.ok .big { color: var(--ok); }
+  .verdict.bad .big { color: var(--bad); }
+
+  .where { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .where > div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .where pre { margin: 0; font: 11.5px/1.5 var(--mono); background: var(--paper); border-radius: 4px; padding: 10px; overflow-x: auto; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; }
+  .check input { margin-top: 3px; }
+  footer { font-size: 13px; color: var(--muted); max-width: 80ch; display: grid; gap: 6px; }
+
+  /* ---- transaction flow ---- */
+  .flow-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .flow-grid { grid-template-columns: 1fr; } }
+  .flow-diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; }
+  .flow-diagram svg { display: block; width: 100%; min-width: 540px; height: auto; }
+  .flow-diagram .lane { font: 500 10.5px var(--mono); letter-spacing: 0.08em; fill: var(--muted); text-anchor: middle; }
+  .fedge { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  .fedge.on { stroke: var(--accent); stroke-width: 2.5; }
+  .fnode rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .fnode.on rect { fill: var(--sunken); stroke: var(--accent); stroke-width: 2.5; }
+  .fnode text { text-anchor: middle; fill: var(--ink); }
+  .fnode .name { font: 600 14px var(--body); }
+  .fnode .sub { font: 400 11px var(--mono); fill: var(--muted); }
+  .packet { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+  .flow-caption { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 8px; align-content: start; min-height: 100%; }
+  .flow-lane { font-size: 13px; color: var(--accent); font-weight: 500; }
+  .flow-caption p { font-size: 14px; }
+  .timer { height: 6px; background: var(--sunken); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .timer span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
+  ol.flow-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  ol.flow-steps button { width: 100%; height: 100%; text-align: left; display: grid; gap: 4px; align-content: start; padding: 10px; line-height: 1.3; }
+  ol.flow-steps .phase { font: 500 10px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  ol.flow-steps .t { font-size: 13px; }
+  ol.flow-steps li.active button { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  ol.flow-steps li.done .phase { color: var(--ok); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .block.fresh { animation: drop-in 0.5s ease-out; }
+    @keyframes drop-in { from { transform: translateY(-10px); opacity: 0.2; } to { transform: none; opacity: 1; } }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="top">
+      <span class="eyebrow">Blockchain-based healthcare record verification · Phase 2 network</span>
+      <h1>Healthchannel Explorer</h1>
+      <p class="lede">The first seven blocks below are the real ledger of our Hyperledger Fabric channel, read from the running peers. Everything you upload on this page is processed with real SHA-256, AES-256-GCM and ECDSA P-256 in your browser, then shown as the block it will create once the backend is connected (Phases 5 and 6).</p>
+    </div>
+    <div class="network" aria-label="Network members">
+      <div class="node"><span class="name"><span class="dot"></span>Hospital A</span><span class="mono muted">peer0.hospitala · HospitalAMSP</span></div>
+      <div class="node"><span class="name"><span class="dot"></span>Hospital B</span><span class="mono muted">peer0.hospitalb · HospitalBMSP</span></div>
+      <div class="node"><span class="name"><span class="dot"></span>Lab</span><span class="mono muted">peer0.lab · LabMSP</span></div>
+      <div class="node"><span class="name"><span class="dot"></span>Orderer</span><span class="mono muted">orderer1 · Raft (etcdraft)</span></div>
+    </div>
+    <div class="facts">
+      <span>Channel <b class="mono">healthchannel</b></span>
+      <span>Endorsement policy <b>MAJORITY</b> (2 of 3 orgs)</span>
+      <span>Height <b id="height">7</b></span>
+      <span>Snapshot taken <b>28 Sep 2026</b></span>
+    </div>
+  </header>
+
+  <section aria-labelledby="chain-h">
+    <div class="section-head">
+      <div>
+        <h2 id="chain-h">The chain</h2>
+        <p class="lede">Each block stores the hash of the block before it. Click a block to see what it contains.</p>
+      </div>
+      <div class="row">
+        <button id="verify-chain">Recompute all hashes</button>
+        <button id="tamper-chain" class="danger">Tamper with block 5</button>
+        <button id="reset-chain">Undo tampering</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><span class="chip real">Real</span> read from the running network</span>
+      <span><span class="chip sim">Simulated</span> created on this page, shows the planned Phase 6 flow</span>
+    </div>
+    <div class="chain-scroll"><div class="chain" id="chain"></div></div>
+    <div class="status" id="chain-status" role="status">7 real blocks loaded. Block hashes are computed the way Fabric does it: SHA-256 over the block header (number, previous hash, data hash).</div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </section>
+
+  <section aria-labelledby="flow-h" id="flow-section">
+    <div class="section-head">
+      <div>
+        <h2 id="flow-h">How a block gets added</h2>
+        <p class="lede">Fabric works in three phases: the peers execute, the orderer orders, and every peer validates. Play a transaction through our network, or step through it while you explain.</p>
+      </div>
+      <div class="row">
+        <select id="flow-tx" aria-label="Transaction to play"></select>
+        <button class="primary" id="flow-play">Play</button>
+        <button id="flow-back">Back</button>
+        <button id="flow-next">Next step</button>
+      </div>
+    </div>
+    <div class="flow-grid">
+      <div class="flow-diagram">
+        <svg id="flow-svg" viewBox="0 0 760 330" role="img" aria-label="The client, the three organizations' peers and the orderer, with the paths a transaction takes between them">
+          <text class="lane" x="90" y="22">CLIENT</text>
+          <text class="lane" x="380" y="22">PEERS · ONE PER ORG</text>
+          <text class="lane" x="670" y="22">ORDERING SERVICE</text>
+          <path class="fedge" id="e-client-a" d="M155,150 L305,75"/>
+          <path class="fedge" id="e-client-b" d="M155,160 L305,160"/>
+          <path class="fedge" id="e-client-lab" d="M155,170 L305,245"/>
+          <path class="fedge" id="e-client-orderer" d="M90,188 C90,352 670,352 670,188"/>
+          <path class="fedge" id="e-orderer-a" d="M605,150 L455,75"/>
+          <path class="fedge" id="e-orderer-b" d="M605,160 L455,160"/>
+          <path class="fedge" id="e-orderer-lab" d="M605,170 L455,245"/>
+          <g class="fnode" data-node="client"><rect x="25" y="132" width="130" height="56" rx="6"/><text class="name" x="90" y="156">Client</text><text class="sub" x="90" y="174">backend / peer CLI</text></g>
+          <g class="fnode" data-node="a"><rect x="305" y="44" width="150" height="56" rx="6"/><text class="name" x="380" y="68">Hospital A</text><text class="sub" x="380" y="86" data-height>peer0 · height 7</text></g>
+          <g class="fnode" data-node="b"><rect x="305" y="132" width="150" height="56" rx="6"/><text class="name" x="380" y="156">Hospital B</text><text class="sub" x="380" y="174" data-height>peer0 · height 7</text></g>
+          <g class="fnode" data-node="lab"><rect x="305" y="222" width="150" height="56" rx="6"/><text class="name" x="380" y="246">Lab</text><text class="sub" x="380" y="264" data-height>peer0 · height 7</text></g>
+          <g class="fnode" data-node="orderer"><rect x="605" y="132" width="130" height="56" rx="6"/><text class="name" x="670" y="156">orderer1</text><text class="sub" x="670" y="174">Raft · OrdererOrg</text></g>
+        </svg>
+      </div>
+      <div class="flow-caption" aria-live="polite">
+        <span class="eyebrow" id="flow-count"></span>
+        <h3 id="flow-title"></h3>
+        <span class="flow-lane" id="flow-lane"></span>
+        <p id="flow-text"></p>
+        <div class="step-out" id="flow-values"></div>
+      </div>
+    </div>
+    <ol class="flow-steps" id="flow-steps">
+    <li><button type="button" data-stage="0"><span class="phase">Execute · 1</span><span class="t">Client sends the proposal</span></button></li>
+    <li><button type="button" data-stage="1"><span class="phase">Execute · 2</span><span class="t">Endorsing peers execute and sign</span></button></li>
+    <li><button type="button" data-stage="2"><span class="phase">Execute · 3</span><span class="t">Client checks and submits</span></button></li>
+    <li><button type="button" data-stage="3"><span class="phase">Order · 4</span><span class="t">Orderer sequences and cuts a block</span></button></li>
+    <li><button type="button" data-stage="4"><span class="phase">Order · 5</span><span class="t">Peers pull the new block</span></button></li>
+    <li><button type="button" data-stage="5"><span class="phase">Validate · 6</span><span class="t">Every peer validates</span></button></li>
+    <li><button type="button" data-stage="6"><span class="phase">Validate · 7</span><span class="t">Commit and notify</span></button></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="bench-h">
+    <div class="section-head">
+      <div>
+        <h2 id="bench-h">Upload and verify a report</h2>
+        <p class="lede">A doctor at Hospital A uploads a blood test. Later the patient, or Hospital B, downloads it and checks it against the ledger.</p>
+      </div>
+    </div>
+
+    <div class="bench">
+      <div class="panel">
+        <div>
+          <h3>Upload</h3>
+          <p class="who">Signed in as Dr. Meera Nair (demo) · DOC-HA-0142 · Hospital A</p>
+        </div>
+        <div class="row">
+          <div class="seg" role="radiogroup" aria-label="Report source">
+            <label><input type="radio" name="src" id="src-sample" value="sample" checked>Sample CBC report</label>
+            <label><input type="radio" name="src" id="src-file" value="file">Your own file</label>
+          </div>
+          <input type="file" id="file-input" hidden>
+        </div>
+        <pre class="report" id="report-preview"></pre>
+        <div class="row">
+          <button class="primary" id="upload-btn">Upload and record on ledger</button>
+        </div>
+        <ol class="steps" id="upload-steps">
+          <li data-step="hash"><span class="step-title">Fingerprint the file (SHA-256)</span><span class="step-why">Any change to the file, even one character, gives a completely different fingerprint.</span><div class="step-out"></div></li>
+          <li data-step="encrypt"><span class="step-title">Encrypt and store in MinIO (AES-256-GCM)</span><span class="step-why">The stored file is unreadable without the key, and GCM detects any change to the encrypted bytes.</span><div class="step-out"></div></li>
+          <li data-step="sign"><span class="step-title">Doctor signs the record (ECDSA P-256)</span><span class="step-why">The signature proves which doctor vouched for this exact fingerprint.</span><div class="step-out"></div></li>
+          <li data-step="endorse"><span class="step-title">Peers endorse the transaction</span><span class="step-why">Hospital A and Hospital B each run the chaincode, which checks the org identity, the doctor and the signature. Two of three orgs meets the MAJORITY policy. The diagram above plays each step.</span><div class="step-out"></div></li>
+          <li data-step="commit"><span class="step-title">Orderer adds a new block</span><span class="step-why">The block links to the previous one by its hash and is copied to all three peers.</span><div class="step-out"></div></li>
+        </ol>
+      </div>
+
+      <div class="panel">
+        <div>
+          <h3>Download and verify</h3>
+          <p class="who">Signed in as the patient (PT-7F3A-92C1), or as Hospital B after consent</p>
+        </div>
+        <label class="row" for="record-select"><span class="muted" style="font-size:13px">Record</span>
+          <select id="record-select" disabled><option>Upload a report first</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="log-view"> <span>Record this view on the ledger (the planned <span class="mono">LogView</span> audit event, Phase 10)</span></label>
+        <div class="row">
+          <button class="primary" id="download-btn" disabled>Download and verify</button>
+        </div>
+        <div class="row">
+          <span class="muted" style="font-size:13px">Attack the stored file:</span>
+          <button class="danger" id="corrupt-btn" disabled>Flip bytes in MinIO</button>
+          <button class="danger" id="insider-btn" disabled>Insider edits and re-encrypts</button>
+          <button id="restore-btn" disabled>Restore original</button>
+        </div>
+        <div class="status" id="attack-status" hidden></div>
+        <ol class="steps" id="verify-steps">
+          <li data-step="fetch"><span class="step-title">Fetch the encrypted file from MinIO</span><span class="step-why">The backend reads the object named in the Postgres row.</span><div class="step-out"></div></li>
+          <li data-step="decrypt"><span class="step-title">Decrypt (AES-256-GCM)</span><span class="step-why">Fails if anyone changed the encrypted bytes.</span><div class="step-out"></div></li>
+          <li data-step="rehash"><span class="step-title">Recompute the fingerprint</span><span class="step-why">SHA-256 of the file we actually received.</span><div class="step-out"></div></li>
+          <li data-step="ledger"><span class="step-title">Read the fingerprint from the ledger</span><span class="step-why">This is a query. Reading the ledger does not create a block.</span><div class="step-out"></div></li>
+          <li data-step="signature"><span class="step-title">Check the doctor's signature</span><span class="step-why">Uses the doctor's public key from the on-chain doctor registry.</span><div class="step-out"></div></li>
+        </ol>
+        <div id="verdict"></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="where-h" id="where-section">
+    <div class="section-head">
+      <div>
+        <h2 id="where-h">Where each piece of the record lives</h2>
+        <p class="lede">The patient's name and the report itself stay off-chain. The ledger only holds the fingerprint, the signature and a pseudonymous patient ID.</p>
+      </div>
+    </div>
+    <div class="where">
+      <div><span class="eyebrow">Off-chain · PostgreSQL row</span><pre id="where-pg">Upload a report to see its database row here.</pre></div>
+      <div><span class="eyebrow">Off-chain · MinIO object</span><pre id="where-minio">Upload a report to see the encrypted object here.</pre></div>
+      <div><span class="eyebrow">On-chain · world state</span><pre id="where-chain">Upload a report to see what the ledger stores.</pre></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>What is real here: blocks 0 to 6, their hashes, transactions and endorsers, fetched from peer0.hospitala with <span class="mono">peer channel fetch</span>. The block-hash formula used on this page reproduces the peer's own <span class="mono">currentBlockHash</span> for block 6.</p>
+    <p>What is simulated: MinIO, PostgreSQL and the new blocks all live in this browser tab and disappear on reload. In a simulated block the data hash is SHA-256 of the transaction JSON, whereas Fabric hashes the signed transaction envelope. The chaincode name <span class="mono">healthrecords</span> and its <span class="mono">CreateRecord</span> and <span class="mono">LogView</span> functions are planned for Phases 6 and 10.</p>
+  </footer>
+</div>
+
+<script>
+const REAL_BLOCKS = [{"number":0,"prevHash":"","dataHash":"2b1f592c9ae8edc9dfcb7cadab3b0e89bc4ef7bb36e0dd6e85dff7f3102a28b9","hash":"4d644be4118f34f76d64a3699745cc99b97e75f3b0525a5f8d922fc1521ac0b1","time":"2026-09-21T13:07:59Z","txId":"9a7ad75f2fcbcc938e92d8b6a3b8274622f5590d3a39b21c617cbb4fe133d569","type":1,"orgs":["HospitalAMSP","HospitalBMSP","LabMSP"],"ordererOrgs":["OrdererOrg"],"creator":"OrdererMSP (configtxgen)"},{"number":1,"prevHash":"4d644be4118f34f76d64a3699745cc99b97e75f3b0525a5f8d922fc1521ac0b1","dataHash":"f913f4552817ca34051d1339367f333ab5836422dcd9938b4d1ff5106b37a194","hash":"c4d5ee7ce549cc123e824553a109c85cf16654e6b296854ef3f7e88531eaceb9","time":"2026-09-21T14:40:49.512694343Z","txId":"1abe4f9081ad9939b46f21e5bac4a00b130126519040fb8741b58a014d9274d1","type":3,"creator":"HospitalAMSP","chaincode":"_lifecycle","fn":"ApproveChaincodeDefinitionForMyOrg","args":["(protobuf 116 bytes)"],"endorsers":["HospitalAMSP"],"writes":[]},{"number":2,"prevHash":"c4d5ee7ce549cc123e824553a109c85cf16654e6b296854ef3f7e88531eaceb9","dataHash":"fa64916e4ceb3a089608ca84e8fc49389c5c87d113f82535302f85bb2da9d025","hash":"9818ccc7b53381733ce08bb0308fb81f4a7a31ccc00082731ff409918b567712","time":"2026-09-21T14:40:51.667607146Z","txId":"5276a3522d3041f58816a8f72c368bd89c1278eaa8363150f646726108ecc33a","type":3,"creator":"HospitalBMSP","chaincode":"_lifecycle","fn":"ApproveChaincodeDefinitionForMyOrg","args":["(protobuf 116 bytes)"],"endorsers":["HospitalBMSP"],"writes":[]},{"number":3,"prevHash":"9818ccc7b53381733ce08bb0308fb81f4a7a31ccc00082731ff409918b567712","dataHash":"0c906810a4e0776862f45cdd6239531ad29a6744541c892150cc6532eec72660","hash":"e03e54a6a58a33df716ced38c9d67b6d466ad18aae61d6393da8dac1745f6b7d","time":"2026-09-21T14:40:53.824794501Z","txId":"39f9f8ee5ce653b676dab8745f446b8ac3984d19540a76ec2b0833f15123b753","type":3,"creator":"LabMSP","chaincode":"_lifecycle","fn":"ApproveChaincodeDefinitionForMyOrg","args":["(protobuf 110 bytes)"],"endorsers":["LabMSP"],"writes":[]},{"number":4,"prevHash":"e03e54a6a58a33df716ced38c9d67b6d466ad18aae61d6393da8dac1745f6b7d","dataHash":"c3f1731bf5d87c4eab52a4b5fdc20683c6ded60922662b030c978db9e703b819","hash":"a3138c2e16bc7b0092d7db8da3f3fd0d0ac37fa7013164f5bc3d6e9b92a77f8c","time":"2026-09-21T14:40:55.999689714Z","txId":"02437e24ff2bd020a383c62a96428f8da83a4775d0a747c32845a7b1e485ba78","type":3,"creator":"LabMSP","chaincode":"_lifecycle","fn":"CommitChaincodeDefinition","args":["(protobuf 20 bytes)"],"endorsers":["HospitalAMSP","HospitalBMSP","LabMSP"],"writes":[{"ns":"_lifecycle","key":"namespaces/fields/proofoflife/Collections"},{"ns":"_lifecycle","key":"namespaces/fields/proofoflife/EndorsementInfo"},{"ns":"_lifecycle","key":"namespaces/fields/proofoflife/Sequence"},{"ns":"_lifecycle","key":"namespaces/fields/proofoflife/ValidationInfo"},{"ns":"_lifecycle","key":"namespaces/metadata/proofoflife"}]},{"number":5,"prevHash":"a3138c2e16bc7b0092d7db8da3f3fd0d0ac37fa7013164f5bc3d6e9b92a77f8c","dataHash":"9e919906b490178181982112e82ae3d615347a62861c33f93110f7f153e52c9b","hash":"4f800f05d25b261cd61122167fd1ca9ac0c2dc2f823f3788f04b6778500b8b94","time":"2026-09-21T14:41:33.232902367Z","txId":"be441ff4e90a6752892cd16f0d1ac86c87959b496f326895ec9a0dfe938b63d4","type":3,"creator":"HospitalAMSP","chaincode":"proofoflife","fn":"Put","args":["greeting","hello from Hospital A"],"endorsers":["HospitalBMSP","HospitalAMSP"],"writes":[{"ns":"proofoflife","key":"greeting"}]},{"number":6,"prevHash":"4f800f05d25b261cd61122167fd1ca9ac0c2dc2f823f3788f04b6778500b8b94","dataHash":"993334ce0ace936b9d7276a86b2f098eb91e5e07b8338606f54f41cb06332134","hash":"7036ae1b86b9b1f1653d06cd70a5fbb803570eef394a957aba9a8424c1b1d39e","time":"2026-09-21T14:43:30.678536804Z","txId":"2caf26607e6da4f4c36630d00c7e3ae8775c8ad558dba5ce1d6c4ccc05048b02","type":3,"creator":"HospitalAMSP","chaincode":"proofoflife","fn":"Put","args":["greeting","hello from Hospital A"],"endorsers":["HospitalBMSP","HospitalAMSP"],"writes":[{"ns":"proofoflife","key":"greeting"}]}];
+
+const ORG_NAME = { HospitalAMSP: "Hospital A", HospitalBMSP: "Hospital B", LabMSP: "Lab" };
+
+const BLOCK_NOTES = {
+  0: "Genesis block. It creates healthchannel and records the rules every member agreed to: the three member organizations, the MAJORITY endorsement policy and Raft ordering. It has no previous hash because nothing comes before it.",
+  1: "Hospital A approves the proofoflife chaincode for its organization. Fabric requires each organization to approve code before it can run on a shared channel.",
+  2: "Hospital B approves the same chaincode definition.",
+  3: "The Lab approves the same chaincode definition.",
+  4: "The chaincode is committed to the channel. All three organizations endorsed this step, so the code is now active for everyone.",
+  5: "First application write, from the smoke test: Put(\"greeting\", \"hello from Hospital A\"). Hospital A and Hospital B endorsed it, which is 2 of 3 and meets the MAJORITY policy.",
+  6: "The smoke test was run a second time. It writes the same key again, so the current value (the world state) is unchanged, but the history gains a new block. Nothing on the ledger is overwritten."
+};
+
+const SAMPLE_REPORT =
+`HOSPITAL A DIAGNOSTICS · Department of Pathology
+Report: Complete Blood Count (CBC)
+
+Patient      : Arjun Menon (demo patient)
+Patient ID   : PT-7F3A-92C1
+Collected    : 27-09-2026 08:40
+Reported     : 27-09-2026 14:05
+
+Test                 Result   Units       Reference
+Haemoglobin          13.5     g/dL        13.0 - 17.0
+RBC count            4.82     10^6/uL     4.50 - 5.50
+WBC count            7200     /uL         4000 - 11000
+Platelet count       2.45     lakh/uL     1.50 - 4.10
+Haematocrit (PCV)    41.2     %           40 - 50
+
+Verified by: Dr. Meera Nair, MD (Pathology)`;
+
+const DOCTOR = { id: "DOC-HA-0142", name: "Dr. Meera Nair", org: "HospitalAMSP" };
+const PATIENT_ID = "PT-7F3A-92C1";
+
+// ---------- small helpers ----------
+const $ = (s) => document.querySelector(s);
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const toHex = (bytes) => Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
+const fromHex = (h) => new Uint8Array((h.match(/../g) || []).map((x) => parseInt(x, 16)));
+const short = (h) => (h ? h.slice(0, 10) + "…" : "none");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const pause = (ms) => new Promise((r) => setTimeout(r, reducedMotion ? 0 : ms));
+
+async function sha256(bytes) {
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+}
+
+// Fabric hashes a block header as SHA-256 over the ASN.1 DER encoding of
+// SEQUENCE { INTEGER number, OCTET STRING previousHash, OCTET STRING dataHash }.
+function derLength(n) {
+  if (n < 128) return [n];
+  const out = [];
+  while (n > 0) { out.unshift(n & 255); n >>= 8; }
+  return [0x80 | out.length, ...out];
+}
+function der(tag, bytes) { return [tag, ...derLength(bytes.length), ...bytes]; }
+function derInt(n) {
+  const out = [];
+  do { out.unshift(n & 255); n = Math.floor(n / 256); } while (n > 0);
+  if (out[0] & 0x80) out.unshift(0);
+  return der(0x02, out);
+}
+async function blockHash(number, prevHex, dataHex) {
+  const body = [...derInt(number), ...der(0x04, [...fromHex(prevHex)]), ...der(0x04, [...fromHex(dataHex)])];
+  return toHex(await sha256(new Uint8Array(der(0x30, body))));
+}
+
+// ---------- chain state ----------
+const chain = REAL_BLOCKS.map((b) => ({ ...b, real: true }));
+const originals = new Map(); // block number -> original fields, while tampered
+let selected = chain.length - 1;
+let freshBlock = null;
+
+function blockLabel(b) {
+  if (b.type === 1) return "Channel created";
+  if (b.fn === "ApproveChaincodeDefinitionForMyOrg") return `${ORG_NAME[b.creator]} approves code`;
+  if (b.fn === "CommitChaincodeDefinition") return "Chaincode committed";
+  return `${b.fn}(${b.args[0] ?? ""})`;
+}
+
+function renderChain() {
+  const el = $("#chain");
+  el.innerHTML = "";
+  chain.forEach((b, i) => {
+    if (i > 0) {
+      const linked = b.prevHash === chain[i - 1].hash;
+      const link = document.createElement("div");
+      link.className = "link" + (linked ? "" : " broken");
+      link.innerHTML = `<span class="tag">${linked ? "linked" : "broken"}</span><span class="bar"></span>`;
+      link.title = linked ? "This block's previous-hash matches the block before it" : "Previous-hash does not match";
+      el.appendChild(link);
+    }
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "block" + (b.real ? "" : " sim") + (i === selected ? " selected" : "") +
+      (originals.has(b.number) ? " altered" : "") + (b.number === freshBlock ? " fresh" : "");
+    card.setAttribute("aria-pressed", i === selected);
+    card.innerHTML = `
+      <span class="row" style="justify-content:space-between"><span class="num">#${b.number}</span>
+        <span class="chip ${b.real ? "real" : "sim"}">${b.real ? "Real" : "Sim"}</span></span>
+      <span class="what">${esc(blockLabel(b))}</span>
+      <span class="h">hash ${short(b.hash)}</span>
+      <span class="h">prev ${short(b.prevHash)}</span>`;
+    card.addEventListener("click", () => { selected = i; renderChain(); renderDetail(); });
+    el.appendChild(card);
+  });
+  $("#height").textContent = chain.filter((b) => b.real).length +
+    (chain.some((b) => !b.real) ? ` + ${chain.filter((b) => !b.real).length} simulated` : "");
+  freshBlock = null;
+  renderPeerHeights();
+}
+
+function renderDetail() {
+  const b = chain[selected];
+  const rows = [];
+  const add = (k, v) => rows.push(`<dt>${k}</dt><dd>${v}</dd>`);
+  add("Time", esc(new Date(b.time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "medium" })));
+  add("Transaction type", b.type === 1 ? "CONFIG (channel configuration)" : "ENDORSER_TRANSACTION (chaincode call)");
+  if (b.type === 1) {
+    add("Member organizations", b.orgs.map((o) => ORG_NAME[o] + ` <span class="mono muted">${o}</span>`).join(", "));
+    add("Ordering organization", b.ordererOrgs.join(", "));
+  } else {
+    add("Submitted by", `${ORG_NAME[b.creator] ?? b.creator} <span class="mono muted">${b.creator}</span>`);
+    const args = b.args.map((a) => a.startsWith("(") ? a : `"${a}"`).join(", ");
+    add("Call", `<span class="mono">${esc(b.chaincode)}.${esc(b.fn)}(${esc(args)})</span>`);
+    add("Endorsed by", b.endorsers.map((e) => ORG_NAME[e] ?? e).join(", "));
+    if (b.writes.length) add("Keys written", b.writes.map((w) => `<span class="mono">${esc(w.key)}</span>`).join("<br>"));
+  }
+  add("Block hash", `<span class="hash">${b.hash}</span>`);
+  add("Previous hash", `<span class="hash">${b.prevHash || "(none, this is the first block)"}</span>`);
+  add("Data hash", `<span class="hash">${b.dataHash}</span>`);
+  add("Transaction ID", `<span class="hash">${b.txId}</span>`);
+
+  const note = originals.has(b.number)
+    ? "This block's contents were changed on this page, so its hash changed too. The next block still stores the old hash, so the link breaks."
+    : (b.note ?? BLOCK_NOTES[b.number] ?? "");
+
+  $("#detail").innerHTML = `
+    <div class="row"><h3>Block #${b.number}</h3><span class="chip ${b.real ? "real" : "sim"}">${b.real ? "Real" : "Simulated"}</span></div>
+    <p class="note">${esc(note)}</p>
+    <dl class="kv">${rows.join("")}</dl>`;
+}
+
+function setChainStatus(text, kind) {
+  const el = $("#chain-status");
+  el.className = "status" + (kind ? " " + kind : "");
+  el.textContent = text;
+}
+
+$("#verify-chain").addEventListener("click", async () => {
+  for (let i = 0; i < chain.length; i++) {
+    const b = chain[i];
+    const recomputed = await blockHash(b.number, b.prevHash, b.dataHash);
+    if (recomputed !== b.hash) {
+      return setChainStatus(`Block #${b.number}: recomputed hash ${short(recomputed)} does not match stored ${short(b.hash)}.`, "bad");
+    }
+    if (i > 0 && b.prevHash !== chain[i - 1].hash) {
+      return setChainStatus(`Chain broken between #${chain[i - 1].number} and #${b.number}. Block #${b.number} expects previous hash ${short(b.prevHash)}, but block #${chain[i - 1].number} now hashes to ${short(chain[i - 1].hash)}. Every peer that still holds the original blocks would reject this copy.`, "bad");
+    }
+  }
+  setChainStatus(`All ${chain.length} blocks check out. Every hash was recomputed in this browser, and each block's previous hash matches the block before it.`, "ok");
+});
+
+$("#tamper-chain").addEventListener("click", async () => {
+  const b = chain.find((x) => x.number === 5);
+  if (originals.has(5)) return;
+  originals.set(5, { dataHash: b.dataHash, hash: b.hash, args: b.args });
+  // Pretend someone edited the stored value in Hospital A's copy of block 5.
+  b.args = ["greeting", "hello from Hospital A (edited)"];
+  b.dataHash = toHex(await sha256(enc.encode(JSON.stringify(b.args))));
+  b.hash = await blockHash(b.number, b.prevHash, b.dataHash);
+  selected = chain.indexOf(b);
+  renderChain();
+  renderDetail();
+  setChainStatus("Block #5 was edited, so its hash changed. Block #6 still points at the old hash, so the chain is visibly broken. To hide the edit, an attacker would have to rewrite every later block, and Hospital B and the Lab would still hold the original copies.", "bad");
+});
+
+$("#reset-chain").addEventListener("click", () => {
+  for (const [num, orig] of originals) Object.assign(chain.find((x) => x.number === num), orig);
+  originals.clear();
+  renderChain();
+  renderDetail();
+  setChainStatus("Tampering undone. Recompute the hashes to confirm the chain is intact again.");
+});
+
+// Builds the next block (what the orderer cuts); pushBlock is the moment peers commit it.
+async function buildBlock(tx) {
+  const prev = chain[chain.length - 1];
+  const number = prev.number + 1;
+  const dataHash = toHex(await sha256(enc.encode(JSON.stringify(tx))));
+  const hash = await blockHash(number, prev.hash, dataHash);
+  const txId = toHex(await sha256(enc.encode(tx.fn + number + Date.now())));
+  return { ...tx, number, prevHash: prev.hash, dataHash, hash, txId, type: 3, time: new Date().toISOString(), real: false };
+}
+
+function pushBlock(block) {
+  chain.push(block);
+  selected = chain.length - 1;
+  freshBlock = block.number;
+  renderChain();
+  renderDetail();
+  $(".chain-scroll").scrollTo({ left: 1e6, behavior: reducedMotion ? "auto" : "smooth" });
+}
+
+// ---------- transaction flow diagram ----------
+const PEER_NODE = { HospitalAMSP: "a", HospitalBMSP: "b", LabMSP: "lab" };
+const STAGES = [
+  { title: "Client sends the proposal", lane: "Client → endorsing peers" },
+  { title: "Endorsing peers execute and sign", lane: "Endorsing peers → client" },
+  { title: "Client checks and submits", lane: "Client → orderer" },
+  { title: "Orderer sequences and cuts a block", lane: "Ordering service" },
+  { title: "Peers pull the new block", lane: "Orderer → every peer" },
+  { title: "Every peer validates", lane: "Every peer, independently" },
+  { title: "Commit and notify", lane: "Every peer, then back to the client" }
+];
+const flow = { tx: null, stage: 0, playing: false, choices: [] };
+
+function readSet(tx) {
+  if (tx.fn === "Put") return "none (Put only writes)";
+  if (tx.fn === "CreateRecord") return `doctor:${DOCTOR.id}, record:${tx.args[0]} (must not exist yet)`;
+  return `record:${tx.args[0]}`;
+}
+
+function stageInfo(i, tx) {
+  const ordered = Object.keys(PEER_NODE).filter((o) => tx.endorsers.includes(o));
+  const endorsers = ordered.map((e) => ORG_NAME[e]);
+  const eNodes = ordered.map((e) => PEER_NODE[e]);
+  const skipped = Object.keys(PEER_NODE).filter((o) => !tx.endorsers.includes(o)).map((o) => ORG_NAME[o]);
+  const call = `${tx.chaincode}.${tx.fn}(${tx.args.map((a) => `"${a}"`).join(", ")})`;
+  const writes = tx.writes.map((w) => w.key).join(", ");
+  const allPeers = ["a", "b", "lab"];
+  switch (i) {
+    case 0: return {
+      nodes: ["client", ...eNodes], edges: eNodes.map((n) => ["e-client-" + n, false]),
+      text: `The endorsement policy only says how many orgs must sign: MAJORITY of 3 means any 2. The client picks which peers to ask. Here it asked ${endorsers.join(" and ")}` + (skipped.length ? `, so the ${skipped.join(", ")} is not involved.` : ".") + (flow.tx.real ? " (smoke-test.sh listed these two peers by hand.)" : " (With the Fabric Gateway, the connected peer picks them automatically.)"),
+      values: kv("call", esc(call)) + kv("signed by", `${ORG_NAME[tx.creator]} identity (${tx.creator})`) + kv("sent to", endorsers.join(", "))
+    };
+    case 1: return {
+      nodes: eNodes, edges: eNodes.map((n) => ["e-client-" + n, true]),
+      text: "Each peer runs its own copy of the chaincode against its own world state. Nothing is written yet. The result is a read/write set, which the peer signs with its organization's key and sends back.",
+      values: kv("read set", esc(readSet(tx))) + kv("write set", esc(writes)) +
+        `<div class="endorse">${endorsers.map((n) => `<span class="yes">${n} signed ✓</span>`).join("")}</div>`
+    };
+    case 2: return {
+      nodes: ["client", "orderer"], edges: [["e-client-orderer", false]],
+      text: "The client checks that the signed results are identical, bundles them into one transaction and sends it to the ordering service.",
+      values: kv("results identical", "yes") + kv("sent to", "orderer1.orderer.healthcare.com")
+    };
+    case 3: return {
+      nodes: ["orderer"], edges: [],
+      text: "The orderer does not run the chaincode or check the endorsements. It only fixes the order, then cuts a block when 2 seconds pass or 10 transactions are waiting. With a single Raft node, orderer1 is always the leader.",
+      values: kv("block", `#${tx.number}`) + kv("previous hash", short(tx.prevHash)) + kv("data hash", short(tx.dataHash)) +
+        kv("block hash", short(tx.hash)) + kv("signed by", "orderer1 (OrdererOrg)") +
+        `<div class="timer"><span id="flow-timer"></span></div><span class="k">batch timer, 2 s (shown faster)</span>`
+    };
+    case 4: return {
+      nodes: ["orderer", ...allPeers], edges: allPeers.map((n) => ["e-orderer-" + n, false]),
+      text: "Each peer is subscribed to the orderer's Deliver service and receives only the new block, never the whole chain. The Lab gets it too, even though it did not endorse.",
+      values: kv("delivered to", "Hospital A, Hospital B, Lab") + kv("block", `#${tx.number}`)
+    };
+    case 5: return {
+      nodes: allPeers, edges: [],
+      text: "Each peer checks every transaction for itself: are there enough valid endorsements for the policy, and has any key it read changed since the simulation? A failing transaction stays in the block, flagged INVALID, and changes nothing.",
+      values: ["HospitalAMSP", "HospitalBMSP", "LabMSP"].map((o) =>
+        kv(ORG_NAME[o], `${tx.endorsers.length} of 3 endorsements ✓ · reads unchanged ✓ → VALID`)).join("")
+    };
+    default: return {
+      nodes: [...allPeers, "client"], edges: [["e-client-a", true]],
+      text: "Each peer appends the block to its own ledger and applies the write set to its world state (LevelDB). Hospital A's peer then tells the client the transaction committed, and the submit call returns.",
+      values: kv("ledger height", `${tx.number + 1} blocks on every peer`) + kv("world state", `${esc(writes)} updated`) +
+        kv("client", "commit event: VALID") + (tx.real ? kv("when", "21 Sep 2026, during smoke-test.sh") : "")
+    };
+  }
+}
+
+function renderFlow() {
+  const i = flow.stage;
+  const info = stageInfo(i, flow.tx);
+  document.querySelectorAll("#flow-svg .fnode").forEach((n) => n.classList.toggle("on", info.nodes.includes(n.dataset.node)));
+  const onEdges = info.edges.map((e) => e[0]);
+  document.querySelectorAll("#flow-svg .fedge").forEach((p) => p.classList.toggle("on", onEdges.includes(p.id)));
+  $("#flow-count").textContent = `Step ${i + 1} of ${STAGES.length} · block #${flow.tx.number}`;
+  $("#flow-title").textContent = STAGES[i].title;
+  $("#flow-lane").textContent = STAGES[i].lane;
+  $("#flow-text").textContent = info.text;
+  $("#flow-values").innerHTML = info.values;
+  document.querySelectorAll("#flow-steps li").forEach((li, k) => { li.className = k < i ? "done" : k === i ? "active" : ""; });
+  $("#flow-back").disabled = flow.playing || i === 0;
+  $("#flow-next").disabled = flow.playing || i === STAGES.length - 1;
+  $("#flow-play").disabled = flow.playing;
+  $("#flow-tx").disabled = flow.playing;
+  document.querySelectorAll("#flow-steps button").forEach((b) => b.disabled = flow.playing);
+}
+
+function renderPeerHeights() {
+  document.querySelectorAll("#flow-svg [data-height]").forEach((t) => t.textContent = `peer0 · height ${chain.length}`);
+}
+
+function sendPacket(pathId, reverse, ms) {
+  if (reducedMotion) return Promise.resolve();
+  const path = document.getElementById(pathId);
+  const len = path.getTotalLength();
+  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  dot.setAttribute("r", "7");
+  dot.setAttribute("class", "packet");
+  $("#flow-svg").appendChild(dot);
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    let finished = false;
+    function finish() {
+      if (finished) return;
+      finished = true;
+      dot.remove();
+      resolve();
+    }
+    function frame(t) {
+      if (finished) return;
+      const k = Math.min(1, (t - t0) / ms);
+      const pt = path.getPointAtLength((reverse ? 1 - k : k) * len);
+      dot.setAttribute("cx", pt.x);
+      dot.setAttribute("cy", pt.y);
+      if (k < 1) requestAnimationFrame(frame);
+      else finish();
+    }
+    requestAnimationFrame(frame);
+    // Browsers pause animation frames in background tabs; don't let the upload wait on them.
+    setTimeout(finish, ms + 50);
+  });
+}
+
+async function animateStage(i) {
+  const info = stageInfo(i, flow.tx);
+  const moves = info.edges.map(([id, reverse]) => sendPacket(id, reverse, id === "e-client-orderer" ? 1100 : 750));
+  if (i === 3) {
+    requestAnimationFrame(() => requestAnimationFrame(() => { const t = $("#flow-timer"); if (t) t.style.width = "100%"; }));
+    moves.push(pause(1000));
+  }
+  await Promise.all(moves);
+}
+
+function refreshFlowChoices() {
+  const sel = $("#flow-tx");
+  sel.innerHTML = "";
+  for (const tx of flow.choices) {
+    const opt = document.createElement("option");
+    opt.value = tx.number;
+    opt.textContent = `Block #${tx.number} · ${tx.fn}(${tx.args[0]}) · ${tx.real ? "real" : "simulated"}`;
+    sel.appendChild(opt);
+  }
+  sel.value = flow.tx.number;
+}
+
+async function playFlow(tx, hooks = {}) {
+  flow.playing = true;
+  flow.tx = tx;
+  if (!flow.choices.includes(tx)) flow.choices.push(tx);
+  refreshFlowChoices();
+  const top = $("#flow-section").getBoundingClientRect().top;
+  if (top < -100 || top > window.innerHeight * 0.5) {
+    $("#flow-section").scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    await pause(500);
+  }
+  try {
+    for (let i = 0; i < STAGES.length; i++) {
+      flow.stage = i;
+      renderFlow();
+      hooks.onStage?.(i);
+      if (i === STAGES.length - 1) hooks.onCommit?.();
+      await animateStage(i);
+      await pause(900);
+    }
+  } finally {
+    flow.playing = false;
+    renderFlow();
+  }
+}
+
+$("#flow-play").addEventListener("click", () => playFlow(flow.tx));
+$("#flow-next").addEventListener("click", () => { flow.stage++; renderFlow(); animateStage(flow.stage); });
+$("#flow-back").addEventListener("click", () => { flow.stage--; renderFlow(); animateStage(flow.stage); });
+$("#flow-tx").addEventListener("change", (e) => {
+  flow.tx = flow.choices.find((t) => String(t.number) === e.target.value);
+  flow.stage = 0;
+  renderFlow();
+});
+document.querySelectorAll("#flow-steps button").forEach((b) => b.addEventListener("click", () => {
+  flow.stage = Number(b.dataset.stage);
+  renderFlow();
+  animateStage(flow.stage);
+}));
+
+// ---------- off-chain stores (simulated in memory) ----------
+const minio = new Map();      // objectKey -> { iv, ciphertext }
+const postgres = new Map();   // recordId  -> row
+const worldState = new Map(); // "record:<id>" -> on-chain value
+const fileKeys = new Map();   // recordId  -> AES key (a real system keeps these in a key store)
+const pristine = new Map();   // recordId  -> original MinIO object, for "Restore original"
+let doctorKeys;
+
+// ---------- upload ----------
+let source = "sample";
+let userFile = null;
+
+function showSample() {
+  $("#report-preview").textContent = SAMPLE_REPORT;
+}
+
+document.querySelectorAll('input[name="src"]').forEach((r) => r.addEventListener("change", (e) => {
+  source = e.target.value;
+  $("#file-input").hidden = source !== "file";
+  if (source === "sample") showSample();
+  else $("#report-preview").textContent = userFile ? `${userFile.name} · ${userFile.bytes.length} bytes` : "Choose a file. It never leaves your browser.";
+}));
+
+$("#file-input").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  userFile = { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) };
+  const isText = /^text\/|json|xml/.test(f.type);
+  $("#report-preview").textContent = isText
+    ? dec.decode(userFile.bytes.slice(0, 4000))
+    : `${f.name} · ${userFile.bytes.length} bytes · ${f.type || "binary file"}`;
+});
+
+function step(listId, name) { return document.querySelector(`#${listId} li[data-step="${name}"]`); }
+function resetSteps(listId) {
+  document.querySelectorAll(`#${listId} li`).forEach((li) => { li.className = ""; li.querySelector(".step-out").innerHTML = ""; });
+}
+function markStep(listId, name, state, html) {
+  const li = step(listId, name);
+  li.className = state;
+  if (html !== undefined) li.querySelector(".step-out").innerHTML = html;
+}
+const kv = (k, v) => `<div><span class="k">${k}</span> ${v}</div>`;
+
+$("#upload-btn").addEventListener("click", async () => {
+  if (flow.playing) return;
+  let bytes, fileName;
+  if (source === "sample") { bytes = enc.encode(SAMPLE_REPORT); fileName = "cbc-report.txt"; }
+  else {
+    if (!userFile) { $("#report-preview").textContent = "Choose a file first, or switch back to the sample report."; return; }
+    bytes = userFile.bytes; fileName = userFile.name;
+  }
+  $("#upload-btn").disabled = true;
+  resetSteps("upload-steps");
+  const recordId = "REC-" + toHex(crypto.getRandomValues(new Uint8Array(4))).toUpperCase();
+
+  // 1. fingerprint
+  markStep("upload-steps", "hash", "active");
+  await pause(350);
+  const fileHash = toHex(await sha256(bytes));
+  markStep("upload-steps", "hash", "done", kv("sha256", fileHash));
+
+  // 2. encrypt + store
+  markStep("upload-steps", "encrypt", "active");
+  await pause(350);
+  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, bytes));
+  const objectKey = `records/${recordId}.enc`;
+  minio.set(objectKey, { iv, ciphertext });
+  pristine.set(recordId, { iv, ciphertext: ciphertext.slice() });
+  fileKeys.set(recordId, key);
+  markStep("upload-steps", "encrypt", "done",
+    kv("object", objectKey) + kv("iv", toHex(iv)) + kv("stored bytes", `${ciphertext.length} (file + 16-byte GCM tag)`) +
+    kv("looks like", toHex(ciphertext.slice(0, 24)) + "…"));
+
+  // 3. doctor signs the manifest
+  markStep("upload-steps", "sign", "active");
+  await pause(350);
+  const manifest = { recordId, patientId: PATIENT_ID, fileHash, doctorId: DOCTOR.id, org: DOCTOR.org, createdAt: new Date().toISOString(), parentRecordId: null };
+  const manifestBytes = enc.encode(JSON.stringify(manifest));
+  const signature = toHex(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, doctorKeys.privateKey, manifestBytes));
+  markStep("upload-steps", "sign", "done", kv("signed", "manifest {recordId, patientId, fileHash, doctorId, org, createdAt}") + kv("signature", short(signature) + ` (${signature.length / 2} bytes)`));
+
+  // 4 + 5. endorsement, ordering and commit, played out in the flow diagram
+  const block = await buildBlock({
+    creator: "HospitalAMSP", chaincode: "healthrecords", fn: "CreateRecord",
+    args: [recordId, PATIENT_ID, short(fileHash)], endorsers: ["HospitalAMSP", "HospitalBMSP"],
+    writes: [{ ns: "healthrecords", key: `record:${recordId}` }],
+    note: `A new record anchored on the ledger. It holds the file's fingerprint and Dr. Nair's signature, but not the file, the patient's name or the results. Its previous hash is block #${chain[chain.length - 1].number}'s hash, so it extends the real chain.`
+  });
+  markStep("upload-steps", "endorse", "active", kv("follow it", "in the diagram above"));
+  await playFlow(block, {
+    onStage(i) {
+      if (i === 2) markStep("upload-steps", "endorse", "done",
+        `<div class="endorse"><span class="yes">Hospital A peer ✓</span><span class="yes">Hospital B peer ✓</span><span>Lab peer: not needed</span></div>`);
+      if (i === 3) markStep("upload-steps", "commit", "active");
+    },
+    onCommit() {
+      worldState.set(`record:${recordId}`, { ...manifest, signature });
+      pushBlock(block);
+    }
+  });
+  markStep("upload-steps", "commit", "done", kv("block", `#${block.number}`) + kv("prev hash", short(block.prevHash)) + kv("block hash", short(block.hash)));
+
+  postgres.set(recordId, {
+    record_id: recordId, patient_name: "Arjun Menon", patient_pseudo_id: PATIENT_ID,
+    file_name: fileName, minio_object: objectKey, sha256: fileHash,
+    uploaded_by: DOCTOR.id, created_at: manifest.createdAt, ledger_block: block.number
+  });
+  renderWhere(recordId);
+  refreshRecordSelect(recordId);
+  $("#upload-btn").disabled = false;
+});
+
+function renderWhere(recordId) {
+  const row = postgres.get(recordId);
+  const obj = minio.get(row.minio_object);
+  $("#where-pg").textContent = JSON.stringify(row, null, 2);
+  $("#where-minio").textContent = `${row.minio_object}\n\n${obj.ciphertext.length} encrypted bytes:\n${toHex(obj.ciphertext.slice(0, 64)).match(/.{1,32}/g).join("\n")}\n…`;
+  const onChain = { ...worldState.get(`record:${recordId}`) };
+  onChain.signature = short(onChain.signature);
+  $("#where-chain").textContent = `key: record:${recordId}\n\n` + JSON.stringify(onChain, null, 2);
+}
+
+function refreshRecordSelect(selectId) {
+  const sel = $("#record-select");
+  sel.innerHTML = "";
+  for (const row of postgres.values()) {
+    const opt = document.createElement("option");
+    opt.value = row.record_id;
+    opt.textContent = `${row.record_id} · ${row.file_name}`;
+    sel.appendChild(opt);
+  }
+  sel.value = selectId;
+  sel.disabled = false;
+  ["#download-btn", "#corrupt-btn", "#insider-btn", "#restore-btn"].forEach((s) => $(s).disabled = false);
+}
+
+$("#record-select").addEventListener("change", (e) => renderWhere(e.target.value));
+
+// ---------- attacks on the stored file ----------
+function attackStatus(text, kind) {
+  const el = $("#attack-status");
+  el.hidden = false;
+  el.className = "status" + (kind ? " " + kind : "");
+  el.textContent = text;
+}
+
+$("#corrupt-btn").addEventListener("click", () => {
+  const row = postgres.get($("#record-select").value);
+  const obj = minio.get(row.minio_object);
+  const bad = obj.ciphertext.slice();
+  bad[Math.floor(bad.length / 3)] ^= 0xff;
+  minio.set(row.minio_object, { iv: obj.iv, ciphertext: bad });
+  renderWhere(row.record_id);
+  attackStatus("An attacker with access to MinIO flipped bits in the encrypted file. They do not have the key.", "bad");
+});
+
+$("#insider-btn").addEventListener("click", async () => {
+  const row = postgres.get($("#record-select").value);
+  const key = fileKeys.get(row.record_id);
+  const obj = pristine.get(row.record_id);
+  let plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: obj.iv }, key, obj.ciphertext));
+  const text = dec.decode(plain);
+  let what;
+  if (text.includes("Haemoglobin          13.5")) {
+    plain = enc.encode(text.replace("Haemoglobin          13.5", "Haemoglobin          15.5"));
+    what = "changed Haemoglobin from 13.5 to 15.5";
+  } else {
+    plain = plain.slice();
+    plain[0] ^= 0x01;
+    what = "changed one byte of the file";
+  }
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain));
+  minio.set(row.minio_object, { iv, ciphertext });
+  // The insider also covers their tracks in the database.
+  row.sha256 = toHex(await sha256(plain));
+  renderWhere(row.record_id);
+  attackStatus(`A hospital insider with the encryption key and database access ${what}, re-encrypted the file and updated the fingerprint in PostgreSQL to match. Only the ledger still has the original fingerprint.`, "bad");
+});
+
+$("#restore-btn").addEventListener("click", async () => {
+  const row = postgres.get($("#record-select").value);
+  const orig = pristine.get(row.record_id);
+  minio.set(row.minio_object, { iv: orig.iv, ciphertext: orig.ciphertext.slice() });
+  row.sha256 = worldState.get(`record:${row.record_id}`).fileHash;
+  renderWhere(row.record_id);
+  attackStatus("Original encrypted file and database fingerprint restored.");
+});
+
+// ---------- download + verify ----------
+function verdict(ok, title, text) {
+  $("#verdict").innerHTML = `<div class="verdict ${ok ? "ok" : "bad"}"><span class="big">${esc(title)}</span><span>${esc(text)}</span></div>`;
+}
+
+$("#download-btn").addEventListener("click", async () => {
+  if (flow.playing) return;
+  const recordId = $("#record-select").value;
+  const row = postgres.get(recordId);
+  $("#download-btn").disabled = true;
+  resetSteps("verify-steps");
+  $("#verdict").innerHTML = "";
+
+  try {
+    markStep("verify-steps", "fetch", "active");
+    await pause(300);
+    const obj = minio.get(row.minio_object);
+    markStep("verify-steps", "fetch", "done", kv("object", row.minio_object) + kv("bytes", obj.ciphertext.length));
+
+    markStep("verify-steps", "decrypt", "active");
+    await pause(300);
+    let plain;
+    try {
+      plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: obj.iv }, fileKeys.get(recordId), obj.ciphertext));
+    } catch {
+      markStep("verify-steps", "decrypt", "fail", kv("result", "authentication tag mismatch"));
+      return verdict(false, "Rejected: stored file was altered", "AES-GCM refused to decrypt because the encrypted bytes in MinIO were changed. The patient never receives a corrupted report.");
+    }
+    markStep("verify-steps", "decrypt", "done", kv("result", `ok, ${plain.length} bytes`));
+
+    markStep("verify-steps", "rehash", "active");
+    await pause(300);
+    const actual = toHex(await sha256(plain));
+    markStep("verify-steps", "rehash", "done", kv("sha256", actual) + kv("postgres says", row.sha256 === actual ? "same" : short(row.sha256)));
+
+    markStep("verify-steps", "ledger", "active");
+    await pause(400);
+    const onChain = worldState.get(`record:${recordId}`);
+    const matches = onChain.fileHash === actual;
+    markStep("verify-steps", "ledger", matches ? "done" : "fail",
+      kv("ledger says", onChain.fileHash) + kv("match", matches ? "yes" : "NO"));
+
+    markStep("verify-steps", "signature", "active");
+    await pause(300);
+    const { signature, ...manifest } = onChain;
+    const sigOk = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, doctorKeys.publicKey, fromHex(signature), enc.encode(JSON.stringify(manifest)));
+    markStep("verify-steps", "signature", sigOk ? "done" : "fail", kv("signer", `${DOCTOR.name} · ${DOCTOR.id}`) + kv("valid", sigOk ? "yes" : "NO"));
+
+    if (!matches) {
+      verdict(false, "Tampered: fingerprint does not match the ledger", "The file decrypts, and PostgreSQL agrees with it, but the ledger still holds the fingerprint Dr. Nair signed at upload. Hospital B and the Lab hold the same ledger, so one hospital cannot quietly change it.");
+    } else if (!sigOk) {
+      verdict(false, "Signature invalid", "The fingerprint matches, but the doctor's signature does not verify.");
+    } else {
+      const text = dec.decode(plain);
+      const printable = !/[\x00-\x08\x0E-\x1F]/.test(text.slice(0, 2000));
+      verdict(true, "Verified", `This is exactly the file ${DOCTOR.name} signed at ${new Date(manifest.createdAt).toLocaleTimeString("en-IN")}.` + (printable ? "" : ` ${plain.length} bytes received.`));
+      if (printable) $("#verdict").insertAdjacentHTML("beforeend", `<pre class="report" style="margin-top:10px">${esc(text.slice(0, 4000))}</pre>`);
+    }
+
+    if ($("#log-view").checked) {
+      const block = await buildBlock({
+        creator: "HospitalAMSP", chaincode: "healthrecords", fn: "LogView",
+        args: [recordId, PATIENT_ID, matches && sigOk ? "VIEW" : "VERIFY_FAILED"], endorsers: ["HospitalAMSP", "HospitalBMSP"],
+        writes: [{ ns: "healthrecords", key: `audit:${recordId}:${Date.now()}` }],
+        note: "An audit event. Verifying was only a query and created nothing, but logging who viewed the record is a submitted transaction, so it creates a block that the patient can later see."
+      });
+      await playFlow(block, { onCommit: () => pushBlock(block) });
+      $("#verdict").insertAdjacentHTML("beforeend", `<p class="muted" style="margin-top:8px;font-size:13px">View recorded on the ledger as block #${block.number}.</p>`);
+    } else {
+      $("#verdict").insertAdjacentHTML("beforeend", `<p class="muted" style="margin-top:8px;font-size:13px">No new block: reading the ledger is a query. Tick the checkbox above to log the view as an audit event.</p>`);
+    }
+  } finally {
+    $("#download-btn").disabled = false;
+  }
+});
+
+// ---------- start ----------
+(async function start() {
+  if (!window.crypto?.subtle) {
+    setChainStatus("This browser does not expose Web Crypto here. Open the page over https or as a local file in Chrome or Firefox.", "bad");
+    return;
+  }
+  doctorKeys = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, false, ["sign", "verify"]);
+  showSample();
+  renderChain();
+  renderDetail();
+  flow.tx = { ...REAL_BLOCKS[5], real: true };
+  flow.choices = [flow.tx];
+  refreshFlowChoices();
+  renderFlow();
+})();
+</script>
